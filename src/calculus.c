@@ -164,7 +164,7 @@ int get_idx_of_func_x(DataArray2 *arr, double x) {
 			idx_x = idx_m; break;
 		}
 
-		if(arr->data[idx_m].y > arr->data[idx_m-1].y) idx0 = idx_m;
+		if(arr->data[idx_m].x < x) idx0 = idx_m;
 		else idx1 = idx_m;
 	}
 
