@@ -341,6 +341,12 @@ void data_arrayn_append_new_from_values(DataArrayN *arr, double *values);
 void data_arrayn_append_new_from_pointers(DataArrayN *arr, double **p_values);
 
 
+void data_array2_append_array(DataArray2 *arr, DataArray2 *arr1, bool free_arr1);
+
+DataArray2 * data_array2_concat(DataArray2 *arr0, DataArray2 *arr1, bool free_original_arrays);
+
+
+
 /*
  * ------------------------------------
  * Search (Sorted)
@@ -424,7 +430,7 @@ void data_array3_insert_new(DataArray3 *arr, Vector3 value);
  * This will keep the array sorted if sorted before
  *
  * @param arr Pointer to the 1-dimensional array
- * @param idx Index of element to remove
+ * @param idx Index of element to remove (if invalid (e.g. -1), set to highest index)
  */
 void data_array1_remove_at_idx(DataArray1 *arr, int idx);
 
@@ -434,7 +440,7 @@ void data_array1_remove_at_idx(DataArray1 *arr, int idx);
  * This will keep the array sorted if sorted before
  *
  * @param arr Pointer to the 2-dimensional array
- * @param idx Index of element to remove
+ * @param idx Index of element to remove (if invalid (e.g. -1), set to highest index)
  */
 void data_array2_remove_at_idx(DataArray2 *arr, int idx);
 
@@ -444,7 +450,7 @@ void data_array2_remove_at_idx(DataArray2 *arr, int idx);
  * This will keep the array sorted if sorted before
  *
  * @param arr Pointer to the 3-dimensional array
- * @param idx Index of element to remove
+ * @param idx Index of element to remove (if invalid (e.g. -1), set to highest index)
  */
 void data_array3_remove_at_idx(DataArray3 *arr, int idx);
 

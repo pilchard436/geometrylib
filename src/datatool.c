@@ -146,15 +146,15 @@ DataArray1 *data_array1_slice(DataArray1 *arr, int start, int end) {
 	if(start > end) return NULL;
 
 	DataArray1 *slice = data_array1_create();
-	int num_elem = end-start+1;
+	int num_elems = end-start+1;
 
-	if(num_elem > DATA_ARRAY_STACK_LIMIT) {
-		slice->capacity = num_elem;
-		slice->data = malloc(num_elem * sizeof(double));
+	if(num_elems > DATA_ARRAY_STACK_LIMIT) {
+		slice->capacity = num_elems;
+		slice->data = malloc(num_elems * sizeof(double));
 		slice->using_heap = true;
 	}
-	memcpy(slice->data, arr->data+start, num_elem*sizeof(double));
-	slice->count = num_elem;
+	memcpy(slice->data, arr->data+start, num_elems*sizeof(double));
+	slice->count = num_elems;
 
 	return slice;
 }
@@ -165,15 +165,15 @@ DataArray2 *data_array2_slice(DataArray2 *arr, int start, int end) {
 	if(start > end) return NULL;
 
 	DataArray2 *slice = data_array2_create();
-	int num_elem = end-start+1;
+	int num_elems = end-start+1;
 
-	if(num_elem > DATA_ARRAY_STACK_LIMIT) {
-		slice->capacity = num_elem;
-		slice->data = malloc(num_elem * sizeof(Vector2));
+	if(num_elems > DATA_ARRAY_STACK_LIMIT) {
+		slice->capacity = num_elems;
+		slice->data = malloc(num_elems * sizeof(Vector2));
 		slice->using_heap = true;
 	}
-	memcpy(slice->data, arr->data+start, num_elem*sizeof(Vector2));
-	slice->count = num_elem;
+	memcpy(slice->data, arr->data+start, num_elems*sizeof(Vector2));
+	slice->count = num_elems;
 
 	return slice;
 }
@@ -184,15 +184,15 @@ DataArray3 *data_array3_slice(DataArray3 *arr, int start, int end) {
 	if(start > end) return NULL;
 
 	DataArray3 *slice = data_array3_create();
-	int num_elem = end-start+1;
+	int num_elems = end-start+1;
 
-	if(num_elem > DATA_ARRAY_STACK_LIMIT) {
-		slice->capacity = num_elem;
-		slice->data = malloc(num_elem * sizeof(Vector3));
+	if(num_elems > DATA_ARRAY_STACK_LIMIT) {
+		slice->capacity = num_elems;
+		slice->data = malloc(num_elems * sizeof(Vector3));
 		slice->using_heap = true;
 	}
-	memcpy(slice->data, arr->data+start, num_elem*sizeof(Vector3));
-	slice->count = num_elem;
+	memcpy(slice->data, arr->data+start, num_elems*sizeof(Vector3));
+	slice->count = num_elems;
 
 	return slice;
 }
@@ -270,6 +270,46 @@ void data_arrayn_append_new_from_pointers(DataArrayN *arr, double **p_values) {
 	check_data_arrayn_add_capacity(arr);
 	for(int i = 0; i < arr->dimensions; i++) arr->data[arr->count][i] = *(p_values[i]);
 	arr->count++;
+}
+
+void data_array2_append_array(DataArray2 *arr, DataArray2 *arr1, bool free_arr1) {
+	size_t num_elems = arr->count + arr1->count;
+
+	if(num_elems > arr->capacity) {
+		arr->capacity = num_elems;
+
+		Vector2 *new_data = malloc(num_elems * sizeof(Vector2));
+		memcpy(new_data, arr->data, arr->count * sizeof(Vector2));
+		if(arr->using_heap) free(arr->data);
+		arr->data = new_data;
+		arr->using_heap = true;
+	}
+	memcpy(&arr->data[arr->count], arr1->data, arr1->count * sizeof(Vector2));
+	arr->count = num_elems;
+
+	if(free_arr1) data_array2_free(arr1);
+}
+
+DataArray2 * data_array2_concat(DataArray2 *arr0, DataArray2 *arr1, bool free_original_arrays) {
+	DataArray2 *new_arr = data_array2_create();
+	size_t num_elems = arr0->count + arr1->count;
+
+	if(num_elems > new_arr->capacity) {
+		new_arr->capacity = num_elems;
+
+		new_arr->data = malloc(num_elems * sizeof(Vector2));
+		new_arr->using_heap = true;
+	}
+	memcpy(new_arr->data, arr0->data, arr0->count * sizeof(Vector2));
+	memcpy(&new_arr->data[arr0->count], arr1->data, arr1->count * sizeof(Vector2));
+	new_arr->count = num_elems;
+
+	if(free_original_arrays) {
+		data_array2_free(arr0);
+		data_array2_free(arr1);
+	}
+
+	return new_arr;
 }
 
 int data_array1_idx_from_binary_search(DataArray1 *arr, double value) {
@@ -412,19 +452,22 @@ void data_array3_insert_new(DataArray3 *arr, Vector3 value) {
 }
 
 void data_array1_remove_at_idx(DataArray1 *arr, int idx) {
-	if(!arr || idx < 0 || idx >= arr->count) return;
+	if(!arr || arr->count == 0) return;
+	if(idx < 0 || idx >= arr->count) idx = (int) arr->count-1;
 	memmove(arr->data+idx, arr->data+idx+1, (arr->count-idx-1) * sizeof(double));
 	arr->count--;
 }
 
 void data_array2_remove_at_idx(DataArray2 *arr, int idx) {
-	if(!arr || idx < 0 || idx >= arr->count) return;
+	if(!arr || arr->count == 0) return;
+	if(idx < 0 || idx >= arr->count) idx = (int) arr->count-1;
 	memmove(arr->data+idx, arr->data+idx+1, (arr->count-idx-1) * sizeof(Vector2));
 	arr->count--;
 }
 
 void data_array3_remove_at_idx(DataArray3 *arr, int idx) {
-	if(!arr || idx < 0 || idx >= arr->count) return;
+	if(!arr || arr->count == 0) return;
+	if(idx < 0 || idx >= arr->count) idx = (int) arr->count-1;
 	memmove(arr->data+idx, arr->data+idx+1, (arr->count-idx-1) * sizeof(Vector3));
 	arr->count--;
 }
