@@ -21,6 +21,7 @@ typedef struct DataArray2 {
 	size_t count;
 	size_t capacity;
 	bool using_heap;
+	bool thread_local_storage;
 } DataArray2;
 
 typedef struct DataArray3 {

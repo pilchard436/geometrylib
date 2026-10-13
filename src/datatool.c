@@ -5,6 +5,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#define DATA_ARRAY_THREAD_LOCAL __declspec(thread)
+#else
+#define DATA_ARRAY_THREAD_LOCAL _Thread_local
+#endif
+
+static DATA_ARRAY_THREAD_LOCAL DataArray2 thread_data_array2;
+static DATA_ARRAY_THREAD_LOCAL bool thread_data_array2_in_use;
 
 size_t data_array1_size(DataArray1 *arr) {return arr->count;}
 size_t data_array2_size(DataArray2 *arr) {return arr->count;}
@@ -27,7 +35,15 @@ DataArray1 * data_array1_create() {
 }
 
 DataArray2 * data_array2_create() {
-	DataArray2* arr = malloc(sizeof(DataArray2));
+	DataArray2 *arr;
+	if(!thread_data_array2_in_use) {
+		arr = &thread_data_array2;
+		thread_data_array2_in_use = true;
+		arr->thread_local_storage = true;
+	} else {
+		arr = malloc(sizeof(DataArray2));
+		arr->thread_local_storage = false;
+	}
 	arr->data = arr->stack_buffer;
 	arr->count = 0;
 	arr->capacity = DATA_ARRAY_STACK_LIMIT;
@@ -100,7 +116,16 @@ void data_array1_free(DataArray1* arr) {
 void data_array2_free(DataArray2* arr) {
 	if(!arr) return;
 	if(arr->using_heap) free(arr->data);
-	free(arr);
+	if(arr->thread_local_storage) {
+		arr->data = arr->stack_buffer;
+		arr->count = 0;
+		arr->capacity = DATA_ARRAY_STACK_LIMIT;
+		arr->using_heap = false;
+		arr->thread_local_storage = false;
+		thread_data_array2_in_use = false;
+	} else {
+		free(arr);
+	}
 }
 
 void data_array3_free(DataArray3* arr) {
